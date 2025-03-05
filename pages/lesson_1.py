@@ -11,7 +11,6 @@ def __():
     from scipy.optimize import root_scalar
     import numpy as np
     import matplotlib.pyplot as plt
-
     return mo, np, plt, root_scalar, st
 
 
@@ -193,9 +192,9 @@ def __(X0_baes, X0_minimax, mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(X0_baes, X0_minimax, plt, x, y_suit, y_unsuit):
-    fig, ax = plt.subplots(figsize=(15, 8))
+    fig, ax = plt.subplots(figsize=(14, 7))
     ax.plot(x, y_suit, label="Распределение для исправных двигателей")
     ax.plot(x, y_unsuit, label="Распределение для неисправных двигателей")
     ax.vlines(
@@ -214,9 +213,35 @@ def __(X0_baes, X0_minimax, plt, x, y_suit, y_unsuit):
         linestyle="dashed",
         color="r",
     )
+    ax.set_xlabel("Содержание железоуглерода в масле")
+    ax.set_ylabel("Плотность распределения")
     ax.set_ylim(0, 1.05 * max(y_suit.max(), y_unsuit.max()))
     ax.legend()
     return ax, fig
+
+
+@app.cell(hide_code=True)
+def __(R, plt, x):
+    fig2, ax2 = plt.subplots(figsize=(14, 7))
+    ax2.plot(x, R)
+    ax2.xaxis.set_major_locator(plt.MaxNLocator(15))
+    ax2.set_xlabel("Содержание железоуглерода в масле (решающее правило)")
+    ax2.set_ylabel("Рискк")
+    ax2.grid()
+    plt.show()
+    return ax2, fig2
+
+
+@app.cell(hide_code=True)
+def __(R_deriv, plt, x):
+    fig3, ax3 = plt.subplots(figsize=(14, 7))
+    ax3.plot(x, R_deriv)
+    ax3.xaxis.set_major_locator(plt.MaxNLocator(20))
+    ax3.set_xlabel("Содержание железоуглерода в масле (решающее правило)")
+    ax3.set_ylabel("Производная риска")
+    ax3.grid()
+    plt.show()
+    return ax3, fig3
 
 
 @app.cell
@@ -226,7 +251,7 @@ def __(mo):
     return (x0_slider,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(Rf, np, plt, second_array, x0_slider):
     p_suit = np.linspace(0, 1)
     fig1, ax1 = plt.subplots()
