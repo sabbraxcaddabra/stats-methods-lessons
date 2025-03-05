@@ -220,15 +220,14 @@ def __(X0_baes, X0_minimax, plt, x, y_suit, y_unsuit):
     return ax, fig
 
 
-@app.cell(hide_code=True)
+@app.cell
 def __(R, plt, x):
     fig2, ax2 = plt.subplots(figsize=(14, 7))
     ax2.plot(x, R)
+    ax2.grid()
     ax2.xaxis.set_major_locator(plt.MaxNLocator(15))
     ax2.set_xlabel("Содержание железоуглерода в масле (решающее правило)")
-    ax2.set_ylabel("Рискк")
-    ax2.grid()
-    plt.show()
+    ax2.set_ylabel("Риск")
     return ax2, fig2
 
 
@@ -236,11 +235,10 @@ def __(R, plt, x):
 def __(R_deriv, plt, x):
     fig3, ax3 = plt.subplots(figsize=(14, 7))
     ax3.plot(x, R_deriv)
+    ax3.grid()
     ax3.xaxis.set_major_locator(plt.MaxNLocator(20))
     ax3.set_xlabel("Содержание железоуглерода в масле (решающее правило)")
     ax3.set_ylabel("Производная риска")
-    ax3.grid()
-    plt.show()
     return ax3, fig3
 
 
