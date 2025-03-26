@@ -15,7 +15,8 @@ def __():
     from scipy.optimize import newton
     import scipy.stats as st
     import marimo as mo
-    return cm, dataclass, mo, newton, np, pd, plt, solve_ivp, st
+    import matplotlib.ticker as tck
+    return cm, dataclass, mo, newton, np, pd, plt, solve_ivp, st, tck
 
 
 @app.cell(hide_code=True)
@@ -163,6 +164,7 @@ def __(mo):
     h_label_p = mo.ui.number(label="$\pm$", value=5)
 
     n_samples = mo.ui.number(label="Количество экспериментов", value=500, start=0, step=50, stop=1000)
+    n_bins = mo.ui.number(label="Количество диапазонов", value=13, start=5, step=1, stop=25)
     return (
         da_label,
         da_label_p,
@@ -170,6 +172,7 @@ def __(mo):
         h_label_p,
         la_label,
         la_label_p,
+        n_bins,
         n_samples,
         rho_u_label,
         rho_u_label_p,
@@ -187,6 +190,7 @@ def __(
     la_label,
     la_label_p,
     mo,
+    n_bins,
     n_samples,
     rho_u_label,
     rho_u_label_p,
@@ -199,7 +203,8 @@ def __(
         mo.hstack([rho_u_label, rho_u_label_p]),
         mo.hstack([sigmat_u_label, sigmat_u_label_p]),
         mo.hstack([h_label, h_label_p]),
-        n_samples
+        n_samples,
+        n_bins
     ])
     return
 
@@ -336,25 +341,60 @@ def __(
 
 
 @app.cell
-def __(ballistic_impact, plt):
+def __(ballistic_impact, n_bins, plt):
     fig, ax = plt.subplots()
-    ax.hist(ballistic_impact, bins=14)
+    ax.hist(ballistic_impact, bins=n_bins.value, rwidth=0.9)
+    ax.set_ylabel('Количество')
+    ax.set_xlabel(r'$V_{ПСП}$')
     ax
     return ax, fig
 
 
 @app.cell
-def __(ballistic_impact, n_samples, np, st):
+def __(ballistic_impact, n_bins, n_samples, np, st):
     mu, sigma = np.mean(ballistic_impact), np.std(ballistic_impact)
-    observed, bins = np.histogram(ballistic_impact)
+    observed, bins = np.histogram(ballistic_impact, n_bins.value)
     expected = np.diff(st.norm.cdf(bins, loc=mu, scale=sigma)) * n_samples.value
     return bins, expected, mu, observed, sigma
 
 
 @app.cell
 def __(expected, observed, st):
-    st.chisquare(observed, expected, ddof=2, sum_check=False)
-    return
+    chi2_res = st.chisquare(observed, expected, ddof=2, sum_check=False)
+    return (chi2_res,)
+
+
+@app.cell(hide_code=True)
+def __(ballistic_impact, mo, n_bins, np):
+    count, bins_values = np.histogram(ballistic_impact, n_bins.value)
+    mo.ui.table(
+        data=[
+            {"Диапазон скоростей, м/с": f"{bins_values[i]:.1f} - {bins_values[i+1]:.1f}", "Количество": count[i]} for i in range(len(count))
+        ],
+        label="Результаты",
+        page_size=30
+    )
+    return bins_values, count
+
+
+@app.cell
+def __(chi2_res, n_bins, newton, np, plt, st, tck):
+    chi2_max = np.ceil(newton(
+        lambda chi2: 1e-4 - st.chi2.sf(chi2, df=n_bins.value - 1 - 2), x0=chi2_res.statistic,
+    ))
+    fig_d, ax_d = plt.subplots()
+    ax_d.plot(
+        np.linspace(0, chi2_max), st.chi2.cdf(np.linspace(0, chi2_max), df=n_bins.value - 1 - 2)
+    )
+    ax_d.set_xlim(0, chi2_max)
+    ax_d.set_ylim(0, 1.05)
+    ax_d.set_xticks(np.arange(0, chi2_max, 2))
+    ax_d.set_xlabel(r'$\chi^2$')
+    ax_d.xaxis.set_minor_locator(tck.AutoMinorLocator())
+    ax_d.yaxis.set_minor_locator(tck.AutoMinorLocator())
+    ax_d.grid()
+    ax_d.set_ylabel(r'$F(\chi^2)$')
+    return ax_d, chi2_max, fig_d
 
 
 @app.cell
