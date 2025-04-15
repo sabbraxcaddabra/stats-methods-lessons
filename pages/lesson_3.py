@@ -22,15 +22,9 @@ def __():
 
 @app.cell
 def __(mo):
-    p_slider = mo.ui.slider(value=0.5, start=0, stop=1, step=0.01)
+    p_slider = mo.ui.slider(value=0.5, start=0, stop=1, step=0.01, label="Степень детерминированности: ")
     p_slider
     return (p_slider,)
-
-
-@app.cell
-def __(p_slider):
-    p_slider.value
-    return
 
 
 @app.cell
@@ -48,14 +42,20 @@ def __(np, num_samples, num_steps, p_slider):
             dW = np.random.normal(0, np.sqrt(dt))
             # Обновление позиции
             samples_positions[i, j] = samples_positions[i, j - 1] + p_slider.value * mu * dt + (1 - p_slider.value) * dW
-    return dW, dt, i, j, mu, samples_positions, steps
+
+    mean_val = np.mean(samples_positions, axis=0)
+    std_val = np.std(samples_positions, axis=0)
+    return dW, dt, i, j, mean_val, mu, samples_positions, std_val, steps
 
 
 @app.cell
-def __(num_samples, plt, samples_positions, steps):
-    fig, ax = plt.subplots()
+def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
+    fig, ax = plt.subplots(figsize=(10, 6.5))
     for s in range(num_samples):
-        ax.plot(steps, samples_positions[s], label=f"Траектория {s+1}")
+        ax.plot(steps, samples_positions[s], label=f"Траектория {s+1}", linewidth=0.7)
+    ax.plot(steps, mean_val, c='k', label=f"Среднее")
+    ax.plot(steps, mean_val + 3 * std_val, c='k', linestyle='--', label=r'$M_x(t) \pm 3 \sigma(t)$')
+    ax.plot(steps, mean_val - 3 * std_val, c='k', linestyle='--')
     ax.set_xlabel("Время, с")
     ax.legend()
     ax.set_ylabel(r"$X(t)$")
@@ -65,13 +65,8 @@ def __(num_samples, plt, samples_positions, steps):
 @app.cell
 def __(np, samples_positions):
     cov_matrix = np.cov(samples_positions, rowvar=False)
-    return (cov_matrix,)
-
-
-@app.cell
-def __(np, samples_positions):
     corr_matrix = np.corrcoef(samples_positions, rowvar=False)
-    return (corr_matrix,)
+    return corr_matrix, cov_matrix
 
 
 @app.cell
@@ -92,15 +87,54 @@ def __(plt, rho):
 
 
 @app.cell
-def __(corr_matrix):
-    corr_matrix
+def __(mo):
+    mo.md(r"""### Траектории""")
     return
 
 
 @app.cell
-def __(np, steps):
-    np.cumsum(np.diff(steps))
+def __(mo, num_steps, samples_positions, steps):
+    template_tnew = ''.join([f"t={steps[0]:>8.3f}"] + [f"{t:>10.3f}" for t in steps[1:]])
+    template = ''.join(["{" + f"{iz}" + ":^10}" for iz in range(num_steps)])
+    with mo.redirect_stdout():
+        print(template_tnew)
+        for iis in range(samples_positions.shape[0]):
+            filler_s = [f"№{iis+1}|{samples_positions[iis, 0]:>7.3f}"] + [f"{samples_positions[iis, jjs]:>10.3f}" for jjs in range(1, samples_positions.shape[1])]
+            print(template.format(*filler_s))
+    return filler_s, iis, template, template_tnew
+
+
+@app.cell
+def __(mo):
+    mo.md(r"""### Ковариационная функция $К_x(t, t')$""")
     return
+
+
+@app.cell
+def __(cov_matrix, mo, template, template_t):
+    with mo.redirect_stdout():
+        print(template_t)
+        for iic in range(cov_matrix.shape[0]):
+            filler_cov = ["-" if jjc < iic else f"{cov_matrix[iic, jjc]:<.3f}" for jjc in range(cov_matrix.shape[1])]
+            print(template.format(*filler_cov))
+    return filler_cov, iic
+
+
+@app.cell
+def __(mo):
+    mo.md(r"""### Корелляционная функция $r_x(t, t')$""")
+    return
+
+
+@app.cell
+def __(corr_matrix, mo, steps, template):
+    template_t = ''.join([f"t={steps[0]:^6.3f}  "] + [f"{t:^10.3f}" for t in steps[1:]])
+    with mo.redirect_stdout():
+        print(template_t)
+        for ii in range(corr_matrix.shape[0]):
+            filler = ["-" if jj < ii else f"{corr_matrix[ii, jj]:<.3f}" for jj in range(corr_matrix.shape[1])]
+            print(template.format(*filler))
+    return filler, ii, template_t
 
 
 @app.cell
