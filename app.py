@@ -10,6 +10,7 @@ server = (
     .with_app(path="", root="./pages/index.py")
     .with_app(path="/lesson_1", root="./pages/lesson_1.py")
     .with_app(path="/lesson_2", root="./pages/lesson_2.py")
+    .with_app(path="/lesson_3", root="./pages/lesson_3.py")
 )
 
 # Create a FastAPI app
