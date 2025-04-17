@@ -9,14 +9,15 @@ def __():
     import numpy as np
     import matplotlib.pyplot as plt
     import marimo as mo
-    return mo, np, plt
+    import pandas as pd
+    return mo, np, pd, plt
 
 
 @app.cell
 def __():
     # Параметры модели
-    num_steps = 12# Количество шагов
-    num_samples = 5 # Количество реализаций случайного процесса
+    num_steps = 12 # Количество шагов
+    num_samples = 50 # Количество реализаций случайного процесса
     return num_samples, num_steps
 
 
@@ -52,7 +53,7 @@ def __(np, num_samples, num_steps, p_slider):
 def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
     fig, ax = plt.subplots(figsize=(10, 6.5))
     for s in range(num_samples):
-        ax.plot(steps, samples_positions[s], label=f"Траектория {s+1}", linewidth=0.7)
+        ax.plot(steps, samples_positions[s], label=f"Траектория {s+1}" if num_samples < 10 else None, linewidth=0.7)
     ax.plot(steps, mean_val, c='k', label=f"Среднее")
     ax.plot(steps, mean_val + 3 * std_val, c='k', linestyle='--', label=r'$M_x(t) \pm 3 \sigma(t)$')
     ax.plot(steps, mean_val - 3 * std_val, c='k', linestyle='--')
@@ -60,6 +61,14 @@ def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
     ax.legend()
     ax.set_ylabel(r"$X(t)$")
     return ax, fig, s
+
+
+@app.cell
+def __(i, pd, steps):
+    df = pd.DataFrame(
+        {f"t={steps[i]}"}
+    )
+    return (df,)
 
 
 @app.cell
@@ -79,7 +88,7 @@ def __(corr_matrix, np, num_steps):
 
 @app.cell
 def __(plt, rho):
-    figr, axr = plt.subplots()
+    figr, axr = plt.subplots(figsize=(10, 6.5))
     axr.plot(rho)
     axr.set_xlabel("Шаг")
     axr.set_ylabel(r"$\rho(\tau)$")
@@ -135,6 +144,34 @@ def __(corr_matrix, mo, steps, template):
             filler = ["-" if jj < ii else f"{corr_matrix[ii, jj]:<.3f}" for jj in range(corr_matrix.shape[1])]
             print(template.format(*filler))
     return filler, ii, template_t
+
+
+@app.cell
+def __(mo, num_steps):
+    first_sample_slider = mo.ui.slider(value=1, start=1, stop=num_steps, step=1, label="Момент времени №1: ")
+    second_sample_slider = mo.ui.slider(value=2, start=1, stop=num_steps, step=1, label="Момент времени №2: ")
+    return first_sample_slider, second_sample_slider
+
+
+@app.cell
+def __(first_sample_slider, mo, second_sample_slider):
+    mo.hstack(
+        [first_sample_slider, second_sample_slider]
+    )
+    return
+
+
+@app.cell
+def __(first_sample_slider, plt, samples_positions, second_sample_slider):
+    fig_sc, ax_sc = plt.subplots(figsize=(10, 6.5))
+    x, y = samples_positions[:, first_sample_slider.value-1], samples_positions[:, second_sample_slider.value-1]
+    ax_sc.scatter(x, y)
+    ax_sc.set_title(
+        f"Коэффициент корреляции r = {
+        sum((x-x.mean()) * (y - y.mean())) / (x.size * x.std() * y.std()):.2f
+        }"
+    )
+    return ax_sc, fig_sc, x, y
 
 
 @app.cell
