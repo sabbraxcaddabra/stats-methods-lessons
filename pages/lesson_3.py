@@ -64,11 +64,18 @@ def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
 
 
 @app.cell
-def __(i, pd, steps):
+def __(num_steps, pd, samples_positions, steps):
     df = pd.DataFrame(
-        {f"t={steps[i]}"}
+        samples_positions,
+        columns=[f"t={steps[i]:.2f}" for i in range(num_steps)]
     )
     return (df,)
+
+
+@app.cell
+def __(df):
+    df
+    return
 
 
 @app.cell
