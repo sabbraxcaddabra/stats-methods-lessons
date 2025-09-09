@@ -8,6 +8,6 @@ build_and_run_podman:
     - podman stop stats_methods || true
     - podman rm stats_methods || true
     - podman image build -t stats_methods_image .
-    - podman run -d --name stats_methods -p 8054:8050 --network bridge stats_methods_image
+    - podman run -d --name stats_methods -p 8055:8050 --network bridge stats_methods_image
   only:
     - main
