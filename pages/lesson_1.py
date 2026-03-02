@@ -11,7 +11,8 @@ def __():
     from scipy.optimize import root_scalar
     import numpy as np
     import matplotlib.pyplot as plt
-    return mo, np, plt, root_scalar, st
+    import plotly.graph_objects as go
+    return go, mo, np, plt, root_scalar, st
 
 
 @app.cell(hide_code=True)
@@ -256,6 +257,33 @@ def __(Rf, np, plt, second_array, x0_slider):
     ax1.set_ylim(0, second_array.value[0])
     ax1.plot(p_suit, Rf(x0_slider.value, p_suit))
     return ax1, fig1, p_suit
+
+
+@app.cell
+def __(Rf, go, np):
+    x0 = np.linspace(2, 12, 150)
+    p = np.linspace(0, 1, 150)
+    X0, P = np.meshgrid(x0, p)
+    RF_surface = Rf(X0, P)
+    fig_surf = go.Figure(
+        data=go.Surface(x=X0, y=P, z=RF_surface)
+    )
+
+    fig_surf.update_layout(
+        title="R = f(X0, P)",
+        scene=dict(
+            xaxis_title="X0",
+            yaxis_title="P",
+            zaxis_title="R",
+        ),
+        margin=dict(l=0, r=0, b=0, t=40),
+    )
+    return P, RF_surface, X0, fig_surf, p, x0
+
+
+@app.cell
+def __():
+    return
 
 
 if __name__ == "__main__":
