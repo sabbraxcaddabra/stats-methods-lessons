@@ -91,7 +91,6 @@ def __(
     mu_suit,
     mu_unsuit,
     np,
-    root_scalar,
     second_array,
     sigma_suit,
     sigma_unsuit,
@@ -154,13 +153,6 @@ def __(
 
     R = Rf(x, P_suit.value)
     R_deriv = RfX0(x, P_suit.value)
-
-    X0_baes = root_scalar(
-        lambda X0: RfX0(X0, P_suit.value), x0=0.5 * (mu_suit.value + mu_unsuit.value)
-    ).root
-    X0_minimax = root_scalar(
-        lambda X0: R_P_suit_deriv(X0), x0=0.5 * (mu_suit.value + mu_unsuit.value)
-    ).root
     return (
         C11,
         C12,
@@ -171,8 +163,6 @@ def __(
         R_deriv,
         Rf,
         RfX0,
-        X0_baes,
-        X0_minimax,
         x,
         x_max,
         x_min,
@@ -181,6 +171,26 @@ def __(
         y_suit,
         y_unsuit,
     )
+
+
+@app.cell(hide_code=True)
+def __(P_suit, R_P_suit_deriv, RfX0, mu_suit, mu_unsuit, np, root_scalar):
+    try:
+        X0_baes_bracket = root_scalar(
+            lambda X0: RfX0(X0, P_suit.value), bracket=[mu_suit.value,  mu_unsuit.value]
+        ).root
+    except:
+        X0_baes_bracket = -np.inf
+        
+    X0_baes_newton = root_scalar(
+        lambda X0: RfX0(X0, P_suit.value), x0=0.5 * (mu_suit.value + mu_unsuit.value)
+    ).root
+
+    X0_baes = max(X0_baes_bracket, X0_baes_newton)
+    X0_minimax = root_scalar(
+        lambda X0: R_P_suit_deriv(X0), x0=0.5 * (mu_suit.value + mu_unsuit.value)
+    ).root
+    return X0_baes, X0_baes_bracket, X0_baes_newton, X0_minimax
 
 
 @app.cell(hide_code=True)
