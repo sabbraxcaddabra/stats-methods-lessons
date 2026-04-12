@@ -8,11 +8,11 @@ app = marimo.App(width="medium")
 def __():
     import marimo as mo
     import scipy.stats as st
-    from scipy.optimize import root_scalar
+    from scipy.optimize import root_scalar, minimize_scalar, brute
     import numpy as np
     import matplotlib.pyplot as plt
     import plotly.graph_objects as go
-    return go, mo, np, plt, root_scalar, st
+    return brute, go, minimize_scalar, mo, np, plt, root_scalar, st
 
 
 @app.cell(hide_code=True)
@@ -174,23 +174,36 @@ def __(
 
 
 @app.cell(hide_code=True)
-def __(P_suit, R_P_suit_deriv, RfX0, mu_suit, mu_unsuit, np, root_scalar):
+def __(
+    P_suit,
+    R_P_suit_deriv,
+    Rf,
+    RfX0,
+    brute,
+    minimize_scalar,
+    mu_suit,
+    mu_unsuit,
+    np,
+    root_scalar,
+):
     try:
         X0_baes_bracket = root_scalar(
             lambda X0: RfX0(X0, P_suit.value), bracket=[mu_suit.value,  mu_unsuit.value]
         ).root
     except:
         X0_baes_bracket = -np.inf
-        
+
+    X0_baes_b = brute(lambda x: Rf(x[0], P_suit.value), ranges=[(0, 50 * mu_unsuit.value),], finish=None, Ns=500)
     X0_baes_newton = root_scalar(
-        lambda X0: RfX0(X0, P_suit.value), x0=0.5 * (mu_suit.value + mu_unsuit.value)
+        lambda X0: RfX0(X0, P_suit.value), x0=X0_baes_b
     ).root
 
-    X0_baes = max(X0_baes_bracket, X0_baes_newton)
+    X0_baes = minimize_scalar(lambda X0: Rf(X0, P_suit.value), bounds=[0, 5 * mu_unsuit.value]).x
+    X0_baes = min(X0_baes, max(0, X0_baes_newton))
     X0_minimax = root_scalar(
         lambda X0: R_P_suit_deriv(X0), x0=0.5 * (mu_suit.value + mu_unsuit.value)
     ).root
-    return X0_baes, X0_baes_bracket, X0_baes_newton, X0_minimax
+    return X0_baes, X0_baes_b, X0_baes_bracket, X0_baes_newton, X0_minimax
 
 
 @app.cell(hide_code=True)
@@ -232,13 +245,16 @@ def __(X0_baes, X0_minimax, plt, x, y_suit, y_unsuit):
 
 
 @app.cell
-def __(R, plt, x):
+def __(P_suit, R, Rf, X0_baes, plt, x):
     fig2, ax2 = plt.subplots(figsize=(14, 7))
     ax2.plot(x, R)
+    ax2.scatter(X0_baes, Rf(X0_baes, P_suit.value), zorder=3, marker="x", label="Минимум")
+    ax2.axhline(Rf(X0_baes, P_suit.value), linewidth=0.5, linestyle="--", color="k")
     ax2.grid()
     ax2.xaxis.set_major_locator(plt.MaxNLocator(15))
     ax2.set_xlabel("Содержание железоуглерода в масле (решающее правило)")
     ax2.set_ylabel("Риск")
+    ax2.legend()
     return ax2, fig2
 
 
@@ -269,7 +285,7 @@ def __(Rf, np, plt, second_array, x0_slider):
     return ax1, fig1, p_suit
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(Rf, go, np):
     x0 = np.linspace(2, 12, 150)
     p = np.linspace(0, 1, 150)
