@@ -158,24 +158,24 @@ def __(mo, num_steps, samples_positions, steps):
     return filler_s, iis, template, template_tnew
 
 
-@app.cell(hide_code=True)
-def __(mo):
-    mo.md(r"""### Ковариационная функция $К_x(t, t')$""")
-    return
-
-
-@app.cell
-def __(cov_matrix, mo, template, template_t):
-    with mo.redirect_stdout():
-        print(template_t)
-        for iic in range(cov_matrix.shape[0]):
-            filler_cov = [
-                "-" if jjc < iic else f"{cov_matrix[iic, jjc]:<.3f}"
-                for jjc in range(cov_matrix.shape[1])
-            ]
-            print(template.format(*filler_cov))
-    return filler_cov, iic
-
+# @app.cell(hide_code=True)
+# def __(mo):
+#     mo.md(r"""### Ковариационная функция $К_x(t, t')$""")
+#     return
+#
+#
+# @app.cell
+# def __(cov_matrix, mo, template, template_t):
+#     with mo.redirect_stdout():
+#         print(template_t)
+#         for iic in range(cov_matrix.shape[0]):
+#             filler_cov = [
+#                 "-" if jjc < iic else f"{cov_matrix[iic, jjc]:<.3f}"
+#                 for jjc in range(cov_matrix.shape[1])
+#             ]
+#             print(template.format(*filler_cov))
+#     return filler_cov, iic
+#
 
 # @app.cell
 # def __(mo):
