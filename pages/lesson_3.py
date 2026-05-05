@@ -10,7 +10,6 @@ def __():
     import matplotlib.pyplot as plt
     import marimo as mo
     import pandas as pd
-
     return mo, np, pd, plt
 
 
@@ -20,6 +19,27 @@ def __():
     num_steps = 12  # Количество шагов
     num_samples = 50  # Количество реализаций случайного процесса
     return num_samples, num_steps
+
+
+@app.cell(hide_code=True)
+def __(mo):
+    mu_widget = mo.ui.number(
+        value=1,
+        start=1,
+        label="Параметр $\mu$",
+    )
+    dt_widget = mo.ui.number(
+        value=0.1,
+        start=0.1,
+        label="Шаг, с",
+    )
+    mo.vstack(
+        [
+            mu_widget,
+            dt_widget
+        ]
+    )
+    return dt_widget, mu_widget
 
 
 @app.cell
@@ -32,9 +52,9 @@ def __(mo):
 
 
 @app.cell
-def __(np, num_samples, num_steps, p_slider):
-    mu = 1
-    dt = 0.1
+def __(dt_widget, mu_widget, np, num_samples, num_steps, p_slider):
+    mu = mu_widget.value
+    dt = dt_widget.value
     # Массив для хранения позиций частицы на каждом шаге
     samples_positions = np.zeros((num_samples, num_steps))
     samples_positions[:, 0] = np.random.normal(0, 0.1, size=num_samples)
@@ -142,7 +162,7 @@ def __(mo, num_steps, samples_positions, steps):
     return filler_s, iis, template, template_tnew
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(mo):
     mo.md(r"""### Ковариационная функция $К_x(t, t')$""")
     return
