@@ -1,28 +1,29 @@
 import marimo
 
-__generated_with = "0.9.31"
+__generated_with = "0.23.5"
 app = marimo.App(width="medium")
 
 
 @app.cell
-def __():
+def _():
     import numpy as np
     import matplotlib.pyplot as plt
     import marimo as mo
     import pandas as pd
+
     return mo, np, pd, plt
 
 
 @app.cell
-def __():
+def _():
     # Параметры модели
     num_steps = 12  # Количество шагов
     num_samples = 50  # Количество реализаций случайного процесса
     return num_samples, num_steps
 
 
-@app.cell(hide_code=True)
-def __(mo):
+@app.cell
+def _(mo):
     mu_widget = mo.ui.number(
         value=1,
         start=1,
@@ -38,16 +39,16 @@ def __(mo):
 
 
 @app.cell
-def __(mo):
+def _(mo):
     p_slider = mo.ui.slider(
-        value=0.5, start=0, stop=1, step=0.01, label="Степень детерминированности: "
+        value=0.5, start=0, stop=1, step=0.01, label="Степень детерминированности: ", show_value=True, include_input=True
     )
     p_slider
     return (p_slider,)
 
 
 @app.cell
-def __(dt_widget, mu_widget, np, num_samples, num_steps, p_slider):
+def _(dt_widget, mu_widget, np, num_samples, num_steps, p_slider):
     mu = mu_widget.value
     dt = dt_widget.value
     # Массив для хранения позиций частицы на каждом шаге
@@ -68,11 +69,11 @@ def __(dt_widget, mu_widget, np, num_samples, num_steps, p_slider):
 
     mean_val = np.mean(samples_positions, axis=0)
     std_val = np.std(samples_positions, axis=0)
-    return dW, dt, i, j, mean_val, mu, samples_positions, std_val, steps
+    return mean_val, samples_positions, std_val, steps
 
 
 @app.cell
-def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
+def _(mean_val, num_samples, plt, samples_positions, std_val, steps):
     fig, ax = plt.subplots(figsize=(10, 6.5))
     for s in range(num_samples):
         ax.plot(
@@ -93,11 +94,11 @@ def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
     ax.set_xlabel("Время, с")
     ax.legend()
     ax.set_ylabel(r"$X(t)$")
-    return ax, fig, s
+    return
 
 
 @app.cell
-def __(num_steps, pd, samples_positions, steps):
+def _(num_steps, pd, samples_positions, steps):
     df = pd.DataFrame(
         samples_positions, columns=[f"t={steps[i]:.2f}" for i in range(num_steps)]
     )
@@ -105,43 +106,45 @@ def __(num_steps, pd, samples_positions, steps):
 
 
 @app.cell
-def __(df):
+def _(df):
     df
     return
 
 
 @app.cell
-def __(np, samples_positions):
+def _(np, samples_positions):
     cov_matrix = np.cov(samples_positions, rowvar=False)
     corr_matrix = np.corrcoef(samples_positions, rowvar=False)
-    return corr_matrix, cov_matrix
+    return (corr_matrix,)
 
 
 @app.cell
-def __(corr_matrix, np, num_steps):
+def _(corr_matrix, np, num_steps):
     rho = np.zeros(num_steps - 1)
     for idx in range(num_steps - 1):
         rho[idx] = np.mean(np.diag(corr_matrix, idx))
-    return idx, rho
+    return (rho,)
 
 
 @app.cell
-def __(plt, rho):
+def _(plt, rho):
     figr, axr = plt.subplots(figsize=(10, 6.5))
     axr.plot(rho)
     axr.set_xlabel("Шаг")
     axr.set_ylabel(r"$\rho(\tau)$")
-    return axr, figr
-
-
-@app.cell
-def __(mo):
-    mo.md(r"""### Траектории""")
     return
 
 
 @app.cell
-def __(mo, num_steps, samples_positions, steps):
+def _(mo):
+    mo.md(r"""
+    ### Траектории
+    """)
+    return
+
+
+@app.cell
+def _(mo, num_steps, samples_positions, steps):
     template_tnew = "".join(
         [f"t={steps[0]:>8.3f}"] + [f"{t:>10.3f}" for t in steps[1:]]
     )
@@ -154,11 +157,11 @@ def __(mo, num_steps, samples_positions, steps):
                 for jjs in range(1, samples_positions.shape[1])
             ]
             print(template.format(*filler_s))
-    return filler_s, iis, template, template_tnew
+    return
 
 
 @app.cell
-def __(mo, num_steps):
+def _(mo, num_steps):
     first_sample_slider = mo.ui.slider(
         value=1, start=1, stop=num_steps, step=1, label="Момент времени №1: "
     )
@@ -169,13 +172,13 @@ def __(mo, num_steps):
 
 
 @app.cell
-def __(first_sample_slider, mo, second_sample_slider):
+def _(first_sample_slider, mo, second_sample_slider):
     mo.hstack([first_sample_slider, second_sample_slider])
     return
 
 
 @app.cell
-def __(first_sample_slider, plt, samples_positions, second_sample_slider):
+def _(first_sample_slider, plt, samples_positions, second_sample_slider):
     fig_sc, ax_sc = plt.subplots(figsize=(10, 6.5))
     x, y = (
         samples_positions[:, first_sample_slider.value - 1],
@@ -187,11 +190,11 @@ def __(first_sample_slider, plt, samples_positions, second_sample_slider):
     #     sum((x-x.mean()) * (y - y.mean())) / (x.size * x.std() * y.std()):.2f
     #     }"
     # )
-    return ax_sc, fig_sc, x, y
+    return
 
 
 @app.cell
-def __():
+def _():
     return
 
 
