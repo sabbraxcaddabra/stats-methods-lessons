@@ -10,7 +10,6 @@ def __():
     import matplotlib.pyplot as plt
     import marimo as mo
     import pandas as pd
-
     return mo, np, pd, plt
 
 
@@ -156,45 +155,6 @@ def __(mo, num_steps, samples_positions, steps):
             ]
             print(template.format(*filler_s))
     return filler_s, iis, template, template_tnew
-
-
-# @app.cell(hide_code=True)
-# def __(mo):
-#     mo.md(r"""### Ковариационная функция $К_x(t, t')$""")
-#     return
-#
-#
-# @app.cell
-# def __(cov_matrix, mo, template, template_t):
-#     with mo.redirect_stdout():
-#         print(template_t)
-#         for iic in range(cov_matrix.shape[0]):
-#             filler_cov = [
-#                 "-" if jjc < iic else f"{cov_matrix[iic, jjc]:<.3f}"
-#                 for jjc in range(cov_matrix.shape[1])
-#             ]
-#             print(template.format(*filler_cov))
-#     return filler_cov, iic
-#
-
-# @app.cell
-# def __(mo):
-#     mo.md(r"""### Корелляционная функция $r_x(t, t')$""")
-#     return
-#
-#
-# @app.cell
-# def __(corr_matrix, mo, steps, template):
-#     template_t = "".join([f"t={steps[0]:^6.3f}  "] + [f"{t:^10.3f}" for t in steps[1:]])
-#     with mo.redirect_stdout():
-#         print(template_t)
-#         for ii in range(corr_matrix.shape[0]):
-#             filler = [
-#                 "-" if jj < ii else f"{corr_matrix[ii, jj]:<.3f}"
-#                 for jj in range(corr_matrix.shape[1])
-#             ]
-#             print(template.format(*filler))
-#     return filler, ii, template_t
 
 
 @app.cell
