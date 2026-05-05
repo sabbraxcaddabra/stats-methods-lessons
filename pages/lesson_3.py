@@ -10,20 +10,23 @@ def __():
     import matplotlib.pyplot as plt
     import marimo as mo
     import pandas as pd
+
     return mo, np, pd, plt
 
 
 @app.cell
 def __():
     # Параметры модели
-    num_steps = 12 # Количество шагов
-    num_samples = 50 # Количество реализаций случайного процесса
+    num_steps = 12  # Количество шагов
+    num_samples = 50  # Количество реализаций случайного процесса
     return num_samples, num_steps
 
 
 @app.cell
 def __(mo):
-    p_slider = mo.ui.slider(value=0.5, start=0, stop=1, step=0.01, label="Степень детерминированности: ")
+    p_slider = mo.ui.slider(
+        value=0.5, start=0, stop=1, step=0.01, label="Степень детерминированности: "
+    )
     p_slider
     return (p_slider,)
 
@@ -42,7 +45,11 @@ def __(np, num_samples, num_steps, p_slider):
             # Случайный шаг: -1 (влево) или 1 (вправо)
             dW = np.random.normal(0, np.sqrt(dt))
             # Обновление позиции
-            samples_positions[i, j] = samples_positions[i, j - 1] + p_slider.value * mu * dt + (1 - p_slider.value) * dW
+            samples_positions[i, j] = (
+                samples_positions[i, j - 1]
+                + p_slider.value * mu * dt
+                + (1 - p_slider.value) * dW
+            )
 
     mean_val = np.mean(samples_positions, axis=0)
     std_val = np.std(samples_positions, axis=0)
@@ -53,10 +60,21 @@ def __(np, num_samples, num_steps, p_slider):
 def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
     fig, ax = plt.subplots(figsize=(10, 6.5))
     for s in range(num_samples):
-        ax.plot(steps, samples_positions[s], label=f"Траектория {s+1}" if num_samples < 10 else None, linewidth=0.7)
-    ax.plot(steps, mean_val, c='k', label=f"Среднее")
-    ax.plot(steps, mean_val + 3 * std_val, c='k', linestyle='--', label=r'$M_x(t) \pm 3 \sigma(t)$')
-    ax.plot(steps, mean_val - 3 * std_val, c='k', linestyle='--')
+        ax.plot(
+            steps,
+            samples_positions[s],
+            label=f"Траектория {s + 1}" if num_samples < 10 else None,
+            linewidth=0.7,
+        )
+    ax.plot(steps, mean_val, c="k", label=f"Среднее")
+    ax.plot(
+        steps,
+        mean_val + 3 * std_val,
+        c="k",
+        linestyle="--",
+        label=r"$M_x(t) \pm 3 \sigma(t)$",
+    )
+    ax.plot(steps, mean_val - 3 * std_val, c="k", linestyle="--")
     ax.set_xlabel("Время, с")
     ax.legend()
     ax.set_ylabel(r"$X(t)$")
@@ -66,8 +84,7 @@ def __(mean_val, num_samples, plt, samples_positions, std_val, steps):
 @app.cell
 def __(num_steps, pd, samples_positions, steps):
     df = pd.DataFrame(
-        samples_positions,
-        columns=[f"t={steps[i]:.2f}" for i in range(num_steps)]
+        samples_positions, columns=[f"t={steps[i]:.2f}" for i in range(num_steps)]
     )
     return (df,)
 
@@ -110,12 +127,17 @@ def __(mo):
 
 @app.cell
 def __(mo, num_steps, samples_positions, steps):
-    template_tnew = ''.join([f"t={steps[0]:>8.3f}"] + [f"{t:>10.3f}" for t in steps[1:]])
-    template = ''.join(["{" + f"{iz}" + ":^10}" for iz in range(num_steps)])
+    template_tnew = "".join(
+        [f"t={steps[0]:>8.3f}"] + [f"{t:>10.3f}" for t in steps[1:]]
+    )
+    template = "".join(["{" + f"{iz}" + ":^10}" for iz in range(num_steps)])
     with mo.redirect_stdout():
         print(template_tnew)
         for iis in range(samples_positions.shape[0]):
-            filler_s = [f"№{iis+1}|{samples_positions[iis, 0]:>7.3f}"] + [f"{samples_positions[iis, jjs]:>10.3f}" for jjs in range(1, samples_positions.shape[1])]
+            filler_s = [f"№{iis + 1}|{samples_positions[iis, 0]:>7.3f}"] + [
+                f"{samples_positions[iis, jjs]:>10.3f}"
+                for jjs in range(1, samples_positions.shape[1])
+            ]
             print(template.format(*filler_s))
     return filler_s, iis, template, template_tnew
 
@@ -131,7 +153,10 @@ def __(cov_matrix, mo, template, template_t):
     with mo.redirect_stdout():
         print(template_t)
         for iic in range(cov_matrix.shape[0]):
-            filler_cov = ["-" if jjc < iic else f"{cov_matrix[iic, jjc]:<.3f}" for jjc in range(cov_matrix.shape[1])]
+            filler_cov = [
+                "-" if jjc < iic else f"{cov_matrix[iic, jjc]:<.3f}"
+                for jjc in range(cov_matrix.shape[1])
+            ]
             print(template.format(*filler_cov))
     return filler_cov, iic
 
@@ -144,40 +169,48 @@ def __(mo):
 
 @app.cell
 def __(corr_matrix, mo, steps, template):
-    template_t = ''.join([f"t={steps[0]:^6.3f}  "] + [f"{t:^10.3f}" for t in steps[1:]])
+    template_t = "".join([f"t={steps[0]:^6.3f}  "] + [f"{t:^10.3f}" for t in steps[1:]])
     with mo.redirect_stdout():
         print(template_t)
         for ii in range(corr_matrix.shape[0]):
-            filler = ["-" if jj < ii else f"{corr_matrix[ii, jj]:<.3f}" for jj in range(corr_matrix.shape[1])]
+            filler = [
+                "-" if jj < ii else f"{corr_matrix[ii, jj]:<.3f}"
+                for jj in range(corr_matrix.shape[1])
+            ]
             print(template.format(*filler))
     return filler, ii, template_t
 
 
 @app.cell
 def __(mo, num_steps):
-    first_sample_slider = mo.ui.slider(value=1, start=1, stop=num_steps, step=1, label="Момент времени №1: ")
-    second_sample_slider = mo.ui.slider(value=2, start=1, stop=num_steps, step=1, label="Момент времени №2: ")
+    first_sample_slider = mo.ui.slider(
+        value=1, start=1, stop=num_steps, step=1, label="Момент времени №1: "
+    )
+    second_sample_slider = mo.ui.slider(
+        value=2, start=1, stop=num_steps, step=1, label="Момент времени №2: "
+    )
     return first_sample_slider, second_sample_slider
 
 
 @app.cell
 def __(first_sample_slider, mo, second_sample_slider):
-    mo.hstack(
-        [first_sample_slider, second_sample_slider]
-    )
+    mo.hstack([first_sample_slider, second_sample_slider])
     return
 
 
 @app.cell
 def __(first_sample_slider, plt, samples_positions, second_sample_slider):
     fig_sc, ax_sc = plt.subplots(figsize=(10, 6.5))
-    x, y = samples_positions[:, first_sample_slider.value-1], samples_positions[:, second_sample_slider.value-1]
-    ax_sc.scatter(x, y)
-    ax_sc.set_title(
-        f"Коэффициент корреляции r = {
-        sum((x-x.mean()) * (y - y.mean())) / (x.size * x.std() * y.std()):.2f
-        }"
+    x, y = (
+        samples_positions[:, first_sample_slider.value - 1],
+        samples_positions[:, second_sample_slider.value - 1],
     )
+    ax_sc.scatter(x, y)
+    # ax_sc.set_title(
+    #     f"Коэффициент корреляции r = {
+    #     sum((x-x.mean()) * (y - y.mean())) / (x.size * x.std() * y.std()):.2f
+    #     }"
+    # )
     return ax_sc, fig_sc, x, y
 
 
